@@ -1,0 +1,20 @@
+name: Build Coordinator
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup MSBuild / .NET
+        uses: microsoft/setup-msbuild@v2
+        
+      - name: Run Build Script
+        run: .\build.ps1
+        shell: powershell
