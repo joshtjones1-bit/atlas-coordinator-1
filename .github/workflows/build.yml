@@ -1,20 +1,12 @@
 name: Build Coordinator
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
+on: [push]
 jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Build with csc
-        run: |
-          $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
-          New-Item -ItemType Directory -Force -Path bin
-          & $csc /target:exe /out:bin\AtlasCoordinatorService.exe /r:System.ServiceProcess.dll /r:System.Web.Extensions.dll /r:System.Security.dll AtlasCoordinatorService.cs
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Run build script
+        run: .\build.ps1
         shell: powershell
