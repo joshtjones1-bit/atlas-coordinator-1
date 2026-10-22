@@ -11,16 +11,10 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
 
       - name: Build with csc
         run: |
-          $csc = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe"
-          if (-not (Test-Path $csc)) {
-              $csc = "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\csc.exe"
-          }
+          $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
           New-Item -ItemType Directory -Force -Path bin
-          & $csc /target:exe /out:bin\AtlasCoordinatorService.exe /r:System.ServiceModel.dll /r:System.Web.Extensions.dll AtlasCoordinatorService.cs
+          & $csc /target:exe /out:bin\AtlasCoordinatorService.exe /r:System.ServiceProcess.dll /r:System.Web.Extensions.dll /r:System.Security.dll AtlasCoordinatorService.cs
         shell: powershell
