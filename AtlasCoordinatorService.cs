@@ -75,8 +75,19 @@ public sealed class AtlasCoordinatorService : ServiceBase
             throw new InvalidOperationException("Fixture stop marker must remain inside its isolated state root.");
 
         string serviceSidName = "NT SERVICE\\" + ServiceName;
-        SecurityIdentifier expectedService = null; // SID lookup disabled for console mode
-        // SID check skipped for interactive run
+        // Production: the process must run as the virtual service account. Console mode (testing) may skip this.
+        try
+        {
+            SecurityIdentifier expectedService = (SecurityIdentifier)new NTAccount(serviceSidName).Translate(typeof(SecurityIdentifier));
+            SecurityIdentifier runningAs = WindowsIdentity.GetCurrent().User;
+            if (!runningAs.Equals(expectedService))
+                throw new InvalidOperationException("Process is not running as " + serviceSidName + ".");
+        }
+        catch (Exception ex)
+        {
+            if (!Environment.UserInteractive) throw;
+            Console.Error.WriteLine("WARNING: SID check skipped in console mode: " + ex.Message);
+        }
 
         Directory.CreateDirectory(stateRoot);
         foreach (string state in new[] { "pending", "approved", "running", "rejected", "done", "failed", "cancelled", "outcome_unknown", "quarantine", "journal", "launches" })
@@ -427,11 +438,13 @@ public sealed class AtlasCoordinatorService : ServiceBase
 
     private static bool IsAllowedSystemBinary(string exe)
     {
-        string systemDir = Path.GetFullPath(Environment.GetFolderPath(Environment.SpecialFolder.System));
-        string dir = Path.GetDirectoryName(exe);
-        if (String.IsNullOrEmpty(dir) || !String.Equals(Path.GetFullPath(dir).TrimEnd(Path.DirectorySeparatorChar), systemDir.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
+        // Fixed %SystemRoot%\System32 (not SpecialFolder.System, which is SysWOW64 for 32-bit processes).
+        string systemDir = Path.GetFullPath(Path.Combine(Environment.GetEnvironmentVariable("SystemRoot") ?? @"C:\Windows", "System32"));
+        string full = Path.GetFullPath(exe);
+        string dir = Path.GetDirectoryName(full);
+        if (String.IsNullOrEmpty(dir) || !String.Equals(dir.TrimEnd(Path.DirectorySeparatorChar), systemDir.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
             return false;
-        string name = Path.GetFileName(exe);
+        string name = Path.GetFileName(full);
         return AllowedSystemBinaries.Any(b => String.Equals(b, name, StringComparison.OrdinalIgnoreCase));
     }
 
