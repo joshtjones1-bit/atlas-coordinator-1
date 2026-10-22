@@ -40,6 +40,19 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 
 The executable is written to `bin\AtlasCoordinatorService.exe`. The `bin` folder is not part of the repository.
 
+
+## Code signing policy
+
+Free code signing provided by SignPath.io, certificate by SignPath Foundation.
+
+Committers and reviewers: The repository owner
+Approvers: The repository owner
+
+## Privacy policy
+
+This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.
+
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
