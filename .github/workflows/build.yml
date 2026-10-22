@@ -6,7 +6,21 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Run build script
-        run: .\build.ps1
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Compile Coordinator
+        run: |
+          $msbuild = Get-Command msbuild | Select-Object -ExpandProperty Source
+          $vsRoot = (Get-Item $msbuild).Directory.Parent.Parent.FullName
+          $csc = Join-Path $vsRoot "MSBuild\Current\Bin\Roslyn\csc.exe"
+          
+          if (-not (Test-Path $csc)) {
+              $csc = Join-Path $vsRoot "MSBuild\Current\Bin\csc.exe"
+          }
+          
+          Write-Host "Using compiler: $csc"
+          New-Item -ItemType Directory -Force -Path bin | Out-Null
+          & $csc /target:exe /out:bin\AtlasCoordinatorService.exe /r:System.ServiceProcess.dll /r:System.Web.Extensions.dll /r:System.Core.dll AtlasCoordinatorService.cs
         shell: powershell
